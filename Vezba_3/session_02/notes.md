@@ -1,0 +1,1 @@
+notes za drugi session
