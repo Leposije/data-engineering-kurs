@@ -1,0 +1,1 @@
+notes za prvi session
