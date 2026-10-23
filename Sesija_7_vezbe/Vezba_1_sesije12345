@@ -1,0 +1,177 @@
+-- Вежба 1 — по нивоима
+-- Изаберите ниво од ког почињете. Када завршите ниво, пређите на следећи.
+-- Сесије 1 и 2
+
+
+
+-- 1. Прикажите утакмице са више од 40.000 гледалаца у марту 2025. Колико их је?
+SELECT CAST(kickoff_ts AS DATE) as datum, home_team, away_team,
+    attendance
+FROM matches_flat
+WHERE attendance > 40000  and kickoff_ts >= '2025-03-01' and kickoff_ts < '2025-04-01'
+ORDER BY datum;
+
+-- 2025-03-15	Kingsbridge City	Dunmore Celtic	40486
+-- 2025-03-29	Kingsbridge City	Oakfield Town	40139
+
+
+
+-- 2. Прикажите све различите комбинације резултата (home_goals, away_goals) за одигране
+-- утакмице, сортиране по укупном броју голова. Колико различитих резултата постоји?
+SELECT DISTINCT home_goals, away_goals
+FROM matches_flat
+WHERE status = 'played'
+ORDER BY home_goals + away_goals;
+-- 36 kombinacija
+SELECT COUNT(*) 
+FROM matches_flat
+WHERE status = 'played'; -- 760 odigranih
+
+
+
+
+-- 3. Који стадиони у имену имају реч „Park“?
+
+SELECT DISTINCT stadium_name
+FROM matches_flat
+WHERE stadium_name like '%Park%';
+
+--  6 stadiona  sadrze ime park
+
+
+-- 4. Прикажите утакмице без податка о посети или о времену: датум, тимове, посету и време, а уместо NULL нека пише 'непознато'. Колико их је?
+
+SELECT CAST(kickoff_ts AS DATE) as datum, home_team, away_team,
+    coalesce(CAST(attendance as String), 'nepoznato') as attendance,
+    coalesce(CAst(kickoff_ts as string), 'nepoznato') as time
+FROM matches_flat
+WHERE attendance IS NULL OR kickoff_ts IS NULL
+ORDER BY datum;
+
+-- 17 redova nema podatak
+
+
+
+-------------------
+
+-- SESIJA 3 i 4
+
+-- 1. За сваког судију прикажите националност (из referees), број утакмица, просечан број голова и проценат победа домаћина. Код ког судије домаћини најчешће побеђују?
+
+SELECT  r.referee_name, r.nationality, 
+    COUNT(*) as  broj_utakmica,
+    ROUND(AVG(m.home_goals + m.away_goals), 2) as prosek_golova,
+    ROUND(100.0 * SUM(CASE WHEN m.home_goals > m.away_goals THEN 1 ELSE 0 END) / COUNT(*),1)
+    as procenat_domacin_win
+FROM matches as m 
+JOIN referees as r ON r.referee_id = m.referee_id
+GROUP BY r.referee_id, r.referee_name, r.nationality
+ORDER BY procenat_domacin_win DESC;
+
+-- 19 sudija
+-- Najveci procenat pobede domacina kod ovih sudija, treba proveriti neke sudije. imaju samo 30% pobeda domacina. Sumnjivo..
+-- Samuel Achebe	Nigeria	40	2.87	52.5
+-- Neil Swarbrick	England	40	2.43	52.5
+
+
+
+
+
+-- 2. Који клубови су у сезони 2024/25 имали више победа у гостима него код куће?
+SELECT team_name,
+    home_win,
+    away_win
+FROM (SELECT team_name,
+    SUM (CASE when m.home_team_id = t.team_id and home_goals>away_goals THEN 1 ELSE 0 END) as home_win,
+    SUM (CASE when m.away_team_id = t.team_id and away_goals>home_goals THEN 1 ELSE 0 end) as away_win
+FROM teams as t
+JOIN matches as m ON t.team_id in (m.home_team_id, m.away_team_id)  
+WHERE m.season = '2024/25'
+GROUP BY team_name)
+WHERE home_win < away_win;
+-- Dobijamo 3 tima da imaju vise pobeda u gostima 
+-- Newbury Forest	4	7
+-- Pemberton United	6	13
+-- Castlebrook United	8	10
+
+
+
+-- 3. Колико играча је давало голове у обе сезоне?
+SELECT count(*) as broj_igraca
+FROM (SELECT e.player_id
+    from match_events as e
+    join matches as m ON m.match_id = e.match_id
+    WHERE e.event_type in ('goal', 'own goal', 'penalty_goal')
+    GROUP BY e.player_id
+    HAVING COUNT(DISTINCT season) = 2);
+-- 193 igraca je dalo gol u obe sezone
+
+
+
+
+
+
+--------------
+-- Сесија 5
+-- 1. Направите табелу лиге каква је била 1. јануара 2025. (сезона 2024/25) Ко је био на врху?
+
+
+WITH team_matches AS (
+SELECT season, home_team_id AS team_id,
+home_goals AS goals_for, away_goals AS goals_against
+FROM matches WHERE status = 'played' and kickoff_ts < '2025-01-01'
+UNION ALL
+SELECT season, away_team_id,
+away_goals, home_goals
+FROM matches WHERE status = 'played' and kickoff_ts <'2025-01-01'
+)
+SELECT t.team_name,
+COUNT(*) AS played,
+SUM(CASE WHEN goals_for > goals_against THEN 3
+WHEN goals_for = goals_against THEN 1 ELSE 0 END) AS points,
+SUM(goals_for - goals_against) AS goal_difference,
+SUM(goals_for) AS goals_scored
+FROM team_matches tm
+JOIN teams t ON tm.team_id = t.team_id
+WHERE tm.season = '2024/25'
+GROUP BY t.team_name
+ORDER BY points DESC, goal_difference DESC, goals_scored DESC
+
+--  Ovo su top 3 tima, 
+-- Northport City	    18 igranih meceva	42  poena	   golova 37 
+-- Kingsbridge City	    18 igranih meceva   37  poena      golova 43
+-- Harrowgate Albion	18 igranih meceva	34	poena      golova 32
+
+
+
+
+
+-- 2. Колико играча је дало гол за два различита клуба?
+
+-- ovo ne radi, mozgao sam bas dugo. nisam mogao se se setim fore za resavanje
+
+-- WITH igrac_gol as (
+--     SELECT player_id, team_id 
+--     FROM match_events
+--     WHERE event_type IN ( 'goal', 'own_goal', 'penalty_goal')
+-- )
+-- SELECT count(*) as broj_igraca
+-- from matches m
+-- LEFT JOIN igrac_gol as ig ON ig.team_id = m.team_id
+-- WHERE ig.team_id = m.team_id
+-- GROUP BY m.player_id;
+
+
+
+
+-- 3. У колико утакмица је тим који је губио на полувремену на крају победио? Колико од тих
+-- преокрета су направили гости?
+
+-- SELECT team_id,
+--     COUNT(*) as broj_utakmica,
+--     SUM(home_team_id = team_id) as gosti
+-- FROM matches 
+-- WHERE home_goals_ht < away_goals_ht and 
+
+
+
