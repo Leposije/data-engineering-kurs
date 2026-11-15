@@ -88,7 +88,7 @@ losses = 0
 draws = 0
 
 for index, row in result.iterrows():
-    if row["home_team"] == team:
+    if row["home_team"] == team_code:
         if row["home_goals"] > row["away_goals"]:
             wins += 1
         elif row["home_goals"] < row["away_goals"]:
@@ -142,7 +142,7 @@ result_max = team_matches.sort_values("goals_scored", ascending=False).head(1)
 
 print(result_max)
 
-
+# 290  match_id  2526291, season  2025/26,  total_goals  7, goals scored  4
 
 
 
@@ -158,7 +158,7 @@ stadiums = teams[["team_code", "home_stadium"]]
 matches_stadiums = matches.merge(
     stadiums,
     left_on="home_team",
-    right_on="team_name"
+    right_on="team_code"
 )
 
 print(teams["home_stadium"].unique())
@@ -181,8 +181,8 @@ result = matches_stadiums["home_stadium"].value_counts().head(1)
 
 print(result)
 
-#Series([], Name: count, dtype: int64)
-
+# home_stadium
+# Crowsnest    19
 
 
 # 3. Prosecna posecenost za svaki stadion
@@ -191,8 +191,28 @@ result = matches_stadiums.groupby("home_stadium")["attendance"].mean()
 
 print(result)
 
-#Series([], Name: count, dtype: int64)
 
+# Home_stadium
+# Antler Park              12873.000000
+# Bramble Field            16570.368421
+# Coldharbour Dome         13109.421053
+# Crowsnest                12776.842105
+# Estuary Ground           20515.277778
+# Fellside                 12438.947368
+# Glacier Road             19120.437500
+# Harbour Park             23820.631579
+# Harrow Lane              19302.421053
+# Kelda Bridge Ground      13812.736842
+# Lighthouse Stadium       24214.526316
+# Moorside Arena           21719.894737
+# Northern Lights Arena    20953.111111
+# Quarry Park               9523.894737
+# Ridgeway Stadium         11309.555556
+# Saltworks Road           12343.157895
+# Shoreline Stadium        14780.526316
+# The Foundry              23818.842105
+# Timber Lane              13498.000000
+# Vale Park                17213.000000
 
 
 # 4. Pet stadiona sa najvecom prosecnom posecenoscu
@@ -202,8 +222,8 @@ result = matches_stadiums.groupby("home_stadium")
 
 print(result)
 
-# Lighthouse Stadium    24214.53
-# Harbour Park          23820.63
-# The Foundry           23818.84
-# Moorside Arena        21719.89
-# Northern Lights Arena 20953.11
+# Lighthouse Stadium       24214.526316
+# Harbour Park             23820.631579
+# The Foundry              23818.842105
+# Moorside Arena           21719.894737
+# Northern Lights Arena    20953.111111
