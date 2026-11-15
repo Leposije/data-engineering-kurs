@@ -3,15 +3,19 @@
 # За CSV фајлове користити модул  csv
 # Функције су задате у истом формату као на прошлом часу:
 # func_name(var1: type, var2: type)-> type
+
+
+
+
+
+
+
 # Фајл data/raw/teams.csv:
-# team,city,pointsFK 
-# Jedinstvo,Bela Palanka,34FK 
-# Radnički,Niš,41FK
-#  Rakovica,"Beograd, Rakovica"
-#,28FK Sloga,Kraljevo,19
-# Задаци са фајловима
-
-
+# team,city,points
+# FK Jedinstvo,Bela Palanka,34
+# FK Radnički,Niš,41
+# FK Rakovica,"Beograd, Rakovica",28
+# FK Sloga,Kraljevo,19
 
 
 
